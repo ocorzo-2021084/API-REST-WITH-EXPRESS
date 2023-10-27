@@ -17,7 +17,6 @@ const userSchema = new Schema({
   },
   repassword: {
     type: String,
-    required: true,
   },
 });
 
