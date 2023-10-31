@@ -1,8 +1,7 @@
 import mongoose from "mongoose";
-import bcryptjs from "bcryptjs";
-import { Schema, model } from "mongoose";
+import bcrypt from "bcryptjs";
 
-const userSchema = new Schema({
+const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
@@ -15,23 +14,25 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
-  repassword: {
-    type: String,
-  },
 });
 
 userSchema.pre("save", async function (next) {
   const user = this;
 
-  if (user.isModified("password"))
-    try {
-      const salt = await bcryptjs.genSalt(10);
-      user.password = await bcryptjs.hash(user.password, salt);
-      next();
-    } catch (error) {
-      console.log(error);
-      throw new Error("Fallo el hash de password");
-    }
+  if (!user.isModified("password")) return next();
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
+    next();
+  } catch (error) {
+    console.log(error);
+    throw new Error("Error al codificar la contraseña");
+  }
 });
 
-export const User = model("User", userSchema);
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+export const User = mongoose.model("User", userSchema);
