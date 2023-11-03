@@ -1,36 +1,52 @@
 import { Router } from "express";
-import express from "express";
-import { login, register } from "../controllers/auth.controller.js";
 import { body } from "express-validator";
+import {
+  infoUser,
+  login,
+  logout,
+  refreshToken,
+  register,
+} from "../controllers/auth.controller.js";
+import { requireToken } from "../middlewares/requireToken.js";
 import { validationResultExpress } from "../middlewares/validationResultExpress.js";
+
 const router = Router();
 
 router.post(
+  "/register",
+  [
+    body("email", "Formato de email incorrecto")
+      .trim()
+      .isEmail()
+      .normalizeEmail(),
+    body("password", "Mínimo 6 carácteres").trim().isLength({ min: 6 }),
+    body("password", "Formato de password incorrecta").custom(
+      (value, { req }) => {
+        if (value !== req.body.repassword) {
+          throw new Error("No coinciden las contraseñas");
+        }
+        return value;
+      }
+    ),
+  ],
+  validationResultExpress,
+  register
+);
+router.post(
   "/login",
   [
-    body("email", "No es un email valido.").trim().isEmail().normalizeEmail(),
-    body("password", "Password demasiado corta").trim().isLength({ min: 6 }),
+    body("email", "Formato de email incorrecto")
+      .trim()
+      .isEmail()
+      .normalizeEmail(),
+    body("password", "Mínimo 6 carácteres").trim().isLength({ min: 6 }),
   ],
   validationResultExpress,
   login
 );
 
-router.post(
-  "/register",
-  [
-    body("email", "No es un email valido.").trim().isEmail().normalizeEmail(),
-    body("password", "Password demasiado corta")
-      .trim()
-      .isLength({ min: 6 })
-      .custom((value, { req }) => {
-        if (value !== req.body.repassword) {
-          throw new Error("No coinciden las passwords");
-        }
-        return value;
-      }),
-  ],
-  validationResultExpress,
-  register
-);
+router.get("/protected", requireToken, infoUser);
+router.get("/refresh", refreshToken);
+router.get("/logout", logout);
 
 export default router;
