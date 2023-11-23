@@ -11,6 +11,14 @@ export const validationResultExpress = (req, res, next) => {
   next();
 };
 
+// export const paramLinkValidator = [
+//   param("id", "Formato no válido (expressValidator)")
+//       .trim()
+//       .notEmpty()
+//       .escape(),
+//   validationResultExpress,
+// ];
+
 export const bodyLinkValidator = [
   body("longLink", "Formato link incorrecto")
     .trim()
